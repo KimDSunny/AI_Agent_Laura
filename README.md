@@ -103,7 +103,7 @@ Supabase PostgreSQL + pgvector + RLS
 ### 1. 저장소 복제 및 프론트엔드 설치
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/KimDSunny/planet-laura.git
 cd planet
 npm install
 ```
