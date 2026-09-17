@@ -245,9 +245,11 @@ class AgentService:
                 return {"response": ChatResponse(text=text, conversation_id=request.conversation_id)}
             references = await self._retry_tool(repository.search_documents, request.message, request.team)
             return {"response": await self._compose_grounded_answer(state, references)}
-        query = "현재 프로젝트" if name == "get_current_projects" else arguments.get("query", request.message)
+        query = "현재 진행 중인 프로젝트 전체" if name == "get_current_projects" else arguments.get("query", request.message)
         query = self._contextualize_query(query, state.get("history", []), request.message)
         references = await self._retry_tool(repository.search_documents, query, request.team)
+        if name == "get_current_projects":
+            return {"response": self._current_projects_response(request, references)}
         return {"response": await self._compose_grounded_answer(state, references)}
 
     async def _compose_grounded_answer(
@@ -487,6 +489,35 @@ class AgentService:
             text=cleaned_text,
             conversation_id=request.conversation_id,
             sources=sources,
+        )
+
+    @staticmethod
+    def _current_projects_response(
+        request: ChatRequest,
+        references: list[DocumentReference],
+    ) -> ChatResponse:
+        project_references: list[DocumentReference] = []
+        seen_sections: set[str] = set()
+        for reference in references:
+            if "프로젝트 현황" not in reference.title or reference.section in seen_sections:
+                continue
+            seen_sections.add(reference.section)
+            project_references.append(reference)
+        if not project_references:
+            return ChatResponse(text="확인할 수 없습니다", conversation_id=request.conversation_id)
+
+        names = "\n".join(f"• {reference.section}" for reference in project_references)
+        return ChatResponse(
+            text=f"현재 진행 중인 프로젝트는 다음 {len(project_references)}개입니다.\n{names}",
+            conversation_id=request.conversation_id,
+            sources=[
+                Source(
+                    title=reference.title,
+                    section=reference.section,
+                    relevant_sentence=reference.content,
+                )
+                for reference in project_references
+            ],
         )
 
     @classmethod

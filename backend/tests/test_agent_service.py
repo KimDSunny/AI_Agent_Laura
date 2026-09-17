@@ -245,3 +245,6 @@ def test_langgraph_current_projects_tool_returns_source(fake_repository):
 
     assert response.action is None
     assert response.sources[0].title == "2026 프로젝트 현황.md"
+    assert "Laura Onboarding Agent v1.0" in response.text
+    assert "Orbit Workspace Admin" in response.text
+    assert "Compass People Analytics" in response.text
