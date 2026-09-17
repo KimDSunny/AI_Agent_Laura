@@ -218,6 +218,36 @@ uv run python scripts/reindex_company_documents.py
 uv run python scripts/verify_company_rag.py
 ```
 
+## Docker로 로컬 실행
+
+React 프로덕션 빌드와 FastAPI를 하나의 이미지로 빌드합니다.
+
+```bash
+docker build -t planet-laura .
+```
+
+로컬 환경변수를 컨테이너에 전달해 실행합니다.
+
+```bash
+docker run --rm \
+  --name planet-laura \
+  --env-file backend/.env \
+  -e FRONTEND_URL=http://127.0.0.1:8000 \
+  -p 8000:8000 \
+  planet-laura
+```
+
+- 애플리케이션: `http://127.0.0.1:8000`
+- API 문서: `http://127.0.0.1:8000/docs`
+- 상태 확인: `http://127.0.0.1:8000/api/v1/health`
+
+이미 `8000` 포트를 사용하는 컨테이너나 로컬 서버가 있다면 먼저 종료합니다.
+
+```bash
+docker ps
+docker stop <container-name-or-id>
+```
+
 ## 데이터와 보안
 
 - 브라우저별 익명 Supabase 사용자를 생성하고 세션은 HttpOnly 쿠키에 저장합니다.
