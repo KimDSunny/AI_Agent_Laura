@@ -107,7 +107,7 @@ def test_langgraph_employee_lookup_returns_immediately(fake_repository):
     )
 
     assert response.action is None
-    assert response.text == "김행성 님은 개발팀 소속이에요."
+    assert response.text == "김행성 님은 개발팀 소속입니다."
 
 
 def test_missing_employee_lookup_falls_back_to_company_documents(fake_repository):
@@ -160,9 +160,73 @@ def test_next_month_release_answer_uses_calendar_range() -> None:
     )
 
     assert response.text == (
-        "확인된 다음 달(10월) 출시 일정은 없어요. "
-        "가장 가까운 정식 출시는 Laura Onboarding Agent v1.0의 11월 2일이에요."
+        "확인된 다음 달(10월) 출시 일정은 없습니다. "
+        "가장 가까운 정식 출시는 Laura Onboarding Agent v1.0의 11월 2일입니다."
     )
+
+
+def test_schedule_tool_rejects_time_inferred_by_model(fake_repository):
+    service = PlannedAgent(
+        "create_schedule",
+        {"title": "팀 회의", "starts_at": "2026-09-18T00:00:00+09:00"},
+    )
+
+    response = asyncio.run(
+        service.chat(
+            ChatRequest(
+                message="내일 팀 회의 일정 등록해줘",
+                team="기획팀",
+                conversation_id="missing-time",
+            ),
+            repository=fake_repository,
+        )
+    )
+
+    assert response.action is None
+    assert response.text == "일정을 등록할 시간을 알려주세요."
+
+
+def test_schedule_clarification_uses_immediately_previous_request() -> None:
+    history = [
+        type("Message", (), {"sender": "user", "text": "내일 팀 회의 일정 등록해줘"})(),
+        type("Message", (), {"sender": "agent", "text": "일정을 등록할 시간을 알려주세요."})(),
+    ]
+
+    context = AgentService._schedule_request_context("오후 3시", history)
+
+    assert AgentService._missing_schedule_fields(context) == []
+
+
+def test_plain_text_removes_markdown_emphasis() -> None:
+    assert AgentService._plain_text("**Laura**는 `AI Agent`입니다.") == "Laura는 AI Agent입니다."
+
+
+def test_unavailable_answer_accepts_terminal_punctuation() -> None:
+    assert AgentService._is_unavailable_answer("확인할 수 없습니다.") is True
+
+
+def test_unavailable_composed_answer_does_not_expose_irrelevant_source() -> None:
+    request = ChatRequest(
+        message="회사 옥상에 수영장이 있어?",
+        team="기획팀",
+        conversation_id="unknown-source",
+    )
+    references = [
+        DocumentReference(
+            title="복지 및 사내 규정.md",
+            section="근무 및 복지",
+            content="월 2회 재택근무를 신청할 수 있습니다.",
+        )
+    ]
+
+    response = AgentService._composed_response(
+        request,
+        "확인할 수 없습니다.",
+        references,
+    )
+
+    assert response.text == "확인할 수 없습니다"
+    assert response.sources == []
 
 
 def test_langgraph_current_projects_tool_returns_source(fake_repository):

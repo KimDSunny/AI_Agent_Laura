@@ -41,7 +41,7 @@ class AuthService:
                 ) from error
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="Supabase 익명 세션을 만들지 못했어.",
+                detail="Supabase 익명 세션을 만들지 못했습니다.",
             ) from error
 
         return self._to_session(response)
@@ -53,7 +53,7 @@ class AuthService:
         except AuthApiError as error:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="세션이 만료됐어. 새 세션이 필요해.",
+                detail="세션이 만료되었습니다. 새 세션이 필요합니다.",
             ) from error
         return self._to_session(response)
 
@@ -81,7 +81,7 @@ class AuthService:
         if user is None or session is None:
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="Supabase 세션 응답이 올바르지 않아.",
+                detail="Supabase 세션 응답이 올바르지 않습니다.",
             )
         return AuthSession(
             user_id=UUID(str(user.id)),
@@ -92,4 +92,3 @@ class AuthService:
 
 
 auth_service = AuthService()
-

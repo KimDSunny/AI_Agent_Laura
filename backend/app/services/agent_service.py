@@ -148,6 +148,7 @@ class AgentService:
 - 일정 생성에는 제목, 날짜, 시간이 모두 필요하다. 하나라도 없으면 도구를 호출하지 말고 이미 받은 정보는 되묻지 않으며 부족한 정보만 한국어로 재질문한다. 날짜는 가능하면 해석한 달력 날짜를 괄호로 확인해준다.
 - 체크리스트 변경에는 항목명과 완료/미완료 의도가 모두 필요하다. 부족하면 재질문한다.
 - 일반 인사나 기능 안내는 핵심 기능 3개 이내, 4문장 이내로 짧게 직접 답한다.
+- Markdown 문법(**, __, #, 백틱)을 사용하지 말고 일반 텍스트와 '•' 불릿만 사용한다.
 - 변경 도구의 실제 실행은 서버가 사용자 승인 뒤에만 처리한다.
 """.strip()
         settings = get_settings()
@@ -168,7 +169,7 @@ class AgentService:
         call = next((item for item in response.output if item.type == "function_call"), None)
         if call is None:
             await self._emit_status(state, "answering", "답변 작성 중")
-            text = response.output_text.strip() or "필요한 정보를 조금 더 알려줘."
+            text = self._plain_text(response.output_text.strip()) or "필요한 정보를 조금 더 알려주세요."
             return {"tool_name": None, "response": ChatResponse(text=text, conversation_id=request.conversation_id)}
         await self._emit_status(
             state,
@@ -183,6 +184,15 @@ class AgentService:
         request, repository = state["request"], state["repository"]
         await self._emit_status(state, "tool_running", f"{self._tool_label(name)} 실행 중", name)
         if name == "create_schedule":
+            schedule_context = self._schedule_request_context(request.message, state.get("history", []))
+            missing_schedule_fields = self._missing_schedule_fields(schedule_context)
+            if missing_schedule_fields:
+                return {
+                    "response": ChatResponse(
+                        text=self._schedule_clarification(missing_schedule_fields),
+                        conversation_id=request.conversation_id,
+                    )
+                }
             try:
                 starts_at = datetime.fromisoformat(arguments["starts_at"])
                 if starts_at.tzinfo is None:
@@ -190,9 +200,9 @@ class AgentService:
                 if starts_at <= datetime.now(ZoneInfo("Asia/Seoul")):
                     raise ValueError
             except (KeyError, TypeError, ValueError):
-                return {"response": ChatResponse(text="등록할 날짜와 시간을 다시 알려줘.", conversation_id=request.conversation_id)}
+                return {"response": ChatResponse(text="등록할 날짜와 시간을 다시 알려주세요.", conversation_id=request.conversation_id)}
             response = ChatResponse(
-                text="Google Calendar에 등록할 일정을 확인했어. 아래 내용을 확인하고 승인해줘.",
+                text="Google Calendar에 등록할 일정을 확인했습니다. 아래 내용을 확인하고 승인해 주세요.",
                 conversation_id=request.conversation_id,
                 action=self._schedule_action(arguments.get("title", "일정"), starts_at),
             )
@@ -210,15 +220,15 @@ class AgentService:
                 parameters={"task_id": task["id"], "task_title": task["title"], "completed": completed},
             )
             await self._emit_status(state, "awaiting_approval", "사용자 승인 대기", name)
-            return {"response": ChatResponse(text="체크리스트 변경 내용을 확인했어. 아래 내용을 확인하고 승인해줘.", conversation_id=request.conversation_id, action=action)}
+            return {"response": ChatResponse(text="체크리스트 변경 내용을 확인했습니다. 아래 내용을 확인하고 승인해 주세요.", conversation_id=request.conversation_id, action=action)}
         if name == "get_onboarding_progress":
             progress = await self._retry_tool(repository.get_onboarding_progress, request.team)
-            text = f"온보딩 체크리스트는 {progress.total}개 중 {progress.completed}개 완료했어. 진행률은 {progress.percentage}%야."
+            text = f"온보딩 체크리스트는 {progress.total}개 중 {progress.completed}개 완료했습니다. 진행률은 {progress.percentage}%입니다."
             return {"response": ChatResponse(text=text, conversation_id=request.conversation_id)}
         if name == "find_employee":
             employee = await self._retry_tool(repository.find_employee, arguments.get("name", ""))
             if employee:
-                text = f"{employee['employee_name']} 님은 {employee['team']} 소속이에요."
+                text = f"{employee['employee_name']} 님은 {employee['team']} 소속입니다."
                 return {"response": ChatResponse(text=text, conversation_id=request.conversation_id)}
             references = await self._retry_tool(repository.search_documents, request.message, request.team)
             return {"response": await self._compose_grounded_answer(state, references)}
@@ -260,6 +270,7 @@ class AgentService:
 - 오늘·다음 달 같은 상대 날짜는 current_datetime과 resolved_relative_period를 기준으로 정확히 계산한다. 범위 밖의 날짜를 다음 달이라고 표현하지 않는다.
 - 근거에 없는 내용은 보완하거나 추측하지 말고 정확히 '확인할 수 없습니다'라고만 답한다.
 - 자연스럽고 친절한 한국어 존댓말을 사용한다. 문서 제목이나 출처 표시는 본문에 넣지 않는다.
+- Markdown 문법(**, __, #, 백틱)을 사용하지 말고 일반 텍스트와 '•' 불릿만 사용한다.
 """.strip()
         now = datetime.now(ZoneInfo("Asia/Seoul"))
         next_month_start = (now.replace(day=28) + timedelta(days=4)).replace(day=1)
@@ -293,18 +304,14 @@ class AgentService:
                 except Exception:
                     if attempt == 1:
                         raise
-            text = response.output_text.strip()
+            text = self._plain_text(response.output_text.strip())
             if not text:
                 raise ValueError("empty grounded response")
         except Exception:
             logger.exception("Grounded answer composition failed; using extractive fallback")
             return self._grounded_response(request, references)
 
-        sources = [
-            Source(title=item.title, section=item.section, relevant_sentence=item.content)
-            for item in references[:6]
-        ]
-        return ChatResponse(text=text, conversation_id=request.conversation_id, sources=sources)
+        return self._composed_response(request, text, references)
 
     @staticmethod
     def _relative_release_response(
@@ -351,19 +358,19 @@ class AgentService:
         ]
         if dates_in_next_month:
             release_date, reference = min(dates_in_next_month, key=lambda item: item[0])
-            text = f"네, {reference.section}의 출시 일정이 {release_date.month}월 {release_date.day}일로 확인돼요."
+            text = f"네, {reference.section}의 출시 일정이 {release_date.month}월 {release_date.day}일로 확인됩니다."
             selected_references = [reference]
         else:
             later_dates = [item for item in release_dates if item[0] >= following_month_start]
             if later_dates:
                 release_date, reference = min(later_dates, key=lambda item: item[0])
                 text = (
-                    f"확인된 다음 달({next_month_start.month}월) 출시 일정은 없어요. "
-                    f"가장 가까운 정식 출시는 {reference.section}의 {release_date.month}월 {release_date.day}일이에요."
+                    f"확인된 다음 달({next_month_start.month}월) 출시 일정은 없습니다. "
+                    f"가장 가까운 정식 출시는 {reference.section}의 {release_date.month}월 {release_date.day}일입니다."
                 )
                 selected_references = [reference]
             else:
-                text = f"확인된 다음 달({next_month_start.month}월) 출시 일정은 없어요."
+                text = f"확인된 다음 달({next_month_start.month}월) 출시 일정은 없습니다."
                 selected_references = release_references[:1]
 
         sources = [
@@ -419,14 +426,91 @@ class AgentService:
             "get_current_projects": "현재 프로젝트 조회",
         }.get(tool_name, "업무 도구")
 
+    @staticmethod
+    def _plain_text(text: str) -> str:
+        """채팅 UI가 일반 텍스트를 렌더링하므로 흔한 Markdown 표식을 제거한다."""
+        text = re.sub(r"\*\*(.+?)\*\*", r"\1", text, flags=re.DOTALL)
+        text = re.sub(r"__(.+?)__", r"\1", text, flags=re.DOTALL)
+        text = re.sub(r"`([^`]+)`", r"\1", text)
+        text = re.sub(r"(?m)^#{1,6}\s+", "", text)
+        return text.strip()
+
+    @staticmethod
+    def _is_unavailable_answer(text: str) -> bool:
+        return text.strip().rstrip(".!?") == "확인할 수 없습니다"
+
+    @classmethod
+    def _composed_response(
+        cls,
+        request: ChatRequest,
+        text: str,
+        references: list[DocumentReference],
+    ) -> ChatResponse:
+        cleaned_text = cls._plain_text(text)
+        if cls._is_unavailable_answer(cleaned_text):
+            return ChatResponse(text="확인할 수 없습니다", conversation_id=request.conversation_id)
+        sources = [
+            Source(title=item.title, section=item.section, relevant_sentence=item.content)
+            for item in references[:6]
+        ]
+        return ChatResponse(
+            text=cleaned_text,
+            conversation_id=request.conversation_id,
+            sources=sources,
+        )
+
+    @classmethod
+    def _schedule_request_context(cls, message: str, history: list[Any]) -> str:
+        """직전 재질문에 대한 답인 경우에만 바로 전 사용자 요청을 이어 붙인다."""
+        if len(history) < 2:
+            return message
+        previous_user, previous_agent = history[-2], history[-1]
+        if previous_user.sender != "user" or previous_agent.sender != "agent":
+            return message
+        if not any(keyword in previous_agent.text for keyword in ("날짜", "시간", "몇 시", "제목")):
+            return message
+        return f"{previous_user.text} {message}"
+
+    @staticmethod
+    def _missing_schedule_fields(message: str) -> list[str]:
+        compact = message.replace(" ", "")
+        has_date = bool(
+            re.search(
+                r"오늘|내일|모레|이번주|다음주|월요일|화요일|수요일|목요일|금요일|토요일|일요일|"
+                r"\d{4}[./-]\d{1,2}[./-]\d{1,2}|\d{1,2}월\d{1,2}일",
+                compact,
+            )
+        )
+        has_time = bool(
+            re.search(
+                r"(?:오전|오후)?\d{1,2}(?::\d{1,2}|시(?:\d{1,2}분)?)|정오|자정",
+                compact,
+            )
+        )
+        missing = []
+        if not has_date:
+            missing.append("날짜")
+        if not has_time:
+            missing.append("시간")
+        return missing
+
+    @staticmethod
+    def _schedule_clarification(missing_fields: list[str]) -> str:
+        if missing_fields == ["날짜"]:
+            return "일정을 등록할 날짜를 알려주세요."
+        if missing_fields == ["시간"]:
+            return "일정을 등록할 시간을 알려주세요."
+        return "일정을 등록할 날짜와 시간을 알려주세요. 예: 오늘 오후 3시에 미팅 등록해 주세요."
+
     def _fallback_response(self, request: ChatRequest, references: list[DocumentReference]) -> ChatResponse:
         compact = request.message.replace(" ", "")
         if any(k in compact for k in ("일정", "교육", "캘린더", "미팅", "회의")) and any(k in compact for k in ("등록", "추가", "예약", "잡아")):
             schedule = self._parse_schedule(request.message)
             if schedule is None:
-                return ChatResponse(text="일정을 등록하려면 날짜와 시간을 함께 알려줘. 예: 오늘 오후 3시에 미팅 등록해줘.", conversation_id=request.conversation_id)
+                missing = self._missing_schedule_fields(request.message)
+                return ChatResponse(text=self._schedule_clarification(missing), conversation_id=request.conversation_id)
             title, starts_at = schedule
-            return ChatResponse(text="Google Calendar에 등록할 일정을 확인했어. 아래 내용을 확인하고 승인해줘.", conversation_id=request.conversation_id, action=self._schedule_action(title, starts_at))
+            return ChatResponse(text="Google Calendar에 등록할 일정을 확인했습니다. 아래 내용을 확인하고 승인해 주세요.", conversation_id=request.conversation_id, action=self._schedule_action(title, starts_at))
         return self._grounded_response(request, references)
 
     @staticmethod

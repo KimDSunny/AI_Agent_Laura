@@ -20,7 +20,7 @@ async def execute_action(
     if not request.confirmed:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="사용자 승인이 필요해.",
+            detail="사용자 승인이 필요합니다.",
         )
     if (
         repository.action_requires_calendar(action_id)
@@ -29,7 +29,7 @@ async def execute_action(
         return ActionResponse(
             action_id=action_id,
             status="authorization_required",
-            message="Google Calendar 권한을 한 번만 연결하면 승인한 일정을 바로 등록할게.",
+            message="Google Calendar 권한을 한 번만 연결하면 승인한 일정을 바로 등록하겠습니다.",
             authorization_url=google_calendar_service.authorization_url(
                 repository,
                 resume_action_id=action_id,

@@ -428,7 +428,7 @@ class SupabaseRepository:
         if profile is None or profile.team != team:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="소속 팀 채팅에만 참여할 수 있어.",
+                detail="소속 팀 채팅에만 참여할 수 있습니다.",
             )
         return profile
 
@@ -490,7 +490,7 @@ class SupabaseRepository:
                         .eq("task_id", payload["task_id"])
                     )
                 )
-                message = f"{payload.get('task_title', '체크리스트')} 항목을 {'완료' if payload.get('completed') else '미완료'} 처리했어."
+                message = f"{payload.get('task_title', '체크리스트')} 항목을 {'완료' if payload.get('completed') else '미완료'} 처리했습니다."
             else:
                 starts_at = datetime.fromisoformat(payload["starts_at"])
                 from app.services.google_calendar_service import google_calendar_service
@@ -522,7 +522,7 @@ class SupabaseRepository:
                         on_conflict="id",
                     )
                 )
-                message = f"{payload.get('schedule_title', '일정')}을 Google Calendar에 등록했어."
+                message = f"{payload.get('schedule_title', '일정')}을 Google Calendar에 등록했습니다."
             self._run(
                 self.client.table("agent_actions")
                 .update(
@@ -542,7 +542,7 @@ class SupabaseRepository:
     def decline_action(self, action_id: str) -> str:
         action = self._get_action(action_id)
         self._update_action_status(action_id, "declined")
-        return "일정 등록을 취소했어." if action["action_type"] == "create_schedule" else "체크리스트 변경을 취소했어."
+        return "일정 등록을 취소했습니다." if action["action_type"] == "create_schedule" else "체크리스트 변경을 취소했습니다."
 
     def _ensure_onboarding_tasks(self, team: str) -> None:
         tasks = self._run(
@@ -666,5 +666,5 @@ class SupabaseRepository:
         except APIError as error:
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="Supabase 데이터 처리 중 문제가 발생했어.",
+                detail="Supabase 데이터 처리 중 문제가 발생했습니다.",
             ) from error

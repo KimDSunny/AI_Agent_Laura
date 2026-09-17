@@ -211,17 +211,17 @@ function LauraIntroduction({
 
       <button className="intro-next" type="button" aria-label="다음 소개 보기" onClick={onGoToFeature} />
       <p className="welcome-message welcome-intro-message">
-        만나서 반가워요! 저는 신입사원이 입사했을때 회사를 잘 이해하고 따라갈 수 있게 도와주는 AI Agent 로라입니다!
+        만나서 반가워요! 저는 신입사원이 입사했을 때 회사를 잘 이해하고 적응할 수 있도록 도와주는 AI Agent 로라입니다!
       </p>
 
       <div className="feature-content">
         <p className="feature-speech" key={featureIndex}>
           {featureIndex === 0
-            ? '로라가 제공하는 핵심 기능 3가지를 소개할게요! 첫번째는 신입사원이 회사에 처음 들어왔을 때 회사 시스템을 빨리 이해할 수 있게 회사에 대한 각종 정보를 제공해줘요!'
+            ? '로라가 제공하는 핵심 기능 3가지를 소개할게요! 첫 번째는 신입사원이 회사에 처음 들어왔을 때 회사 시스템을 빠르게 이해할 수 있도록 다양한 사내 정보를 제공하는 기능입니다.'
             : featureIndex === 1
-              ? '로라가 제공하는 핵심 기능 두 번째는 AI Agent 기능입니다. 일정을 등록해달라고 말만 하면 Agent가 실제 일정 등록 작업을 수행합니다.'
+              ? '두 번째는 AI Agent 기능입니다. 일정을 등록해 달라고 말하면 Agent가 내용을 확인하고, 사용자 승인 후 실제 일정 등록 작업을 수행합니다.'
               : featureIndex === 2
-                ? '마지막 기능은 향후 예정인 멀티 AI Agent입니다. 로라가 최상단 주축 Agent가 되어 여러 팀에 속한 개별 Agent에게 명령을 내릴 수 있습니다.'
+                ? '마지막은 향후 제공할 멀티 AI Agent 기능입니다. 로라가 최상위 Agent가 되어 여러 팀의 개별 Agent에게 작업을 전달할 수 있습니다.'
                 : '그럼 바로 로라랑 대화를 시작해봐요!'}
         </p>
 
@@ -230,7 +230,7 @@ function LauraIntroduction({
             <FeatureDemo
               active={featureMode && lauraArrived}
               demoId="project"
-              question="지금 현재 회사가 어떤 프로젝트 진행중이야?"
+              question="현재 회사에서 어떤 프로젝트를 진행 중이야?"
               buttonLabel="전송"
               onPlayButtonSound={onPlayButtonSound}
               onStartKeyboard={onStartKeyboard}

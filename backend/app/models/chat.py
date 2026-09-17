@@ -18,7 +18,7 @@ class ChatRequest(BaseModel):
     def message_must_not_be_blank(cls, value: str) -> str:
         cleaned = value.strip()
         if not cleaned:
-            raise ValueError("메시지를 입력해줘.")
+            raise ValueError("메시지를 입력해 주세요.")
         return cleaned
 
 

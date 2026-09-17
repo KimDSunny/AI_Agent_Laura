@@ -170,11 +170,11 @@ class FakeRepository:
         self.actions[action_id].status = "approved"
         if self.actions[action_id].type == "update_checklist":
             return "보안 교육 수강 항목을 완료 처리했어."
-        return "보안 교육 일정을 온보딩 체크리스트에 등록했어."
+        return "보안 교육 일정을 온보딩 체크리스트에 등록했습니다."
 
     def decline_action(self, action_id: str):
         self.actions[action_id].status = "declined"
-        return "일정 등록을 취소했어."
+        return "일정 등록을 취소했습니다."
 
 
 @pytest.fixture(autouse=True)

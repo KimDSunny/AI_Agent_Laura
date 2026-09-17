@@ -14,7 +14,7 @@ async function request(path, options = {}, retrySession = true) {
       },
     });
   } catch {
-    throw new Error('FastAPI 서버에 연결할 수 없어. 백엔드가 실행 중인지 확인해줘.');
+    throw new Error('FastAPI 서버에 연결할 수 없습니다. 백엔드가 실행 중인지 확인해 주세요.');
   }
 
   if (response.status === 401 && retrySession && path !== '/auth/session') {
@@ -24,7 +24,7 @@ async function request(path, options = {}, retrySession = true) {
 
   const data = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(data?.detail || `서버 요청에 실패했어. (${response.status})`);
+    throw new Error(data?.detail || `서버 요청에 실패했습니다. (${response.status})`);
   }
   return data;
 }
@@ -62,7 +62,7 @@ export async function askLauraStream(
       body: JSON.stringify({ message, team, conversation_id: conversationId }),
     });
   } catch {
-    throw new Error('FastAPI 서버에 연결할 수 없어. 백엔드가 실행 중인지 확인해줘.');
+    throw new Error('FastAPI 서버에 연결할 수 없습니다. 백엔드가 실행 중인지 확인해 주세요.');
   }
 
   if (response.status === 401) {
@@ -71,7 +71,7 @@ export async function askLauraStream(
   }
   if (!response.ok || !response.body) {
     const data = await response.json().catch(() => null);
-    throw new Error(data?.detail || `서버 요청에 실패했어. (${response.status})`);
+    throw new Error(data?.detail || `서버 요청에 실패했습니다. (${response.status})`);
   }
 
   const reader = response.body.getReader();
@@ -97,7 +97,7 @@ export async function askLauraStream(
     if (done) break;
   }
 
-  if (!finalResponse) throw new Error('로라의 답변이 중간에 끊겼어.');
+  if (!finalResponse) throw new Error('로라의 답변이 중간에 끊겼습니다.');
   return finalResponse;
 }
 

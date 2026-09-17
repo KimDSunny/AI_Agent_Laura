@@ -224,7 +224,7 @@ def test_schedule_request_asks_again_when_time_is_missing() -> None:
     )
 
     assert response.json()["action"] is None
-    assert "날짜와 시간을" in response.json()["text"]
+    assert response.json()["text"] == "일정을 등록할 시간을 알려주세요."
 
 
 def test_checklist_action_does_not_require_google_calendar(fake_repository) -> None:

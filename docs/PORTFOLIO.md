@@ -178,7 +178,7 @@ docker buildx build --platform linux/amd64 -t planet-laura:amd64 --load .
 
 ## 검증
 
-- 백엔드 자동화 테스트 49개 통과
+- 백엔드 자동화 테스트 54개 통과
 - Agent 도구 선택과 승인 대기 상태 테스트
 - 변경 작업이 승인 전 실행되지 않는지 테스트
 - Tool 실패 후 단일 재시도 테스트

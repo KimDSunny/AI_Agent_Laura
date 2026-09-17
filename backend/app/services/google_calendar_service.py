@@ -78,7 +78,7 @@ class GoogleCalendarService:
                 "redirect_uri": settings.google_oauth_redirect_uri,
                 "grant_type": "authorization_code",
             },
-            error_message="Google 인증 코드를 교환하지 못했어.",
+            error_message="Google 인증 코드를 교환하지 못했습니다.",
         )
         if not token_data.get("refresh_token"):
             previous = repository.get_google_calendar_connection()
@@ -88,7 +88,7 @@ class GoogleCalendarService:
         if not token_data.get("access_token") or not token_data.get("refresh_token"):
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
-                detail="Google에서 오프라인 접근 토큰을 받지 못했어. 다시 연결해줘.",
+                detail="Google에서 오프라인 접근 토큰을 받지 못했습니다. 다시 연결해 주세요.",
             )
         token_data["expires_at"] = self._expires_at(token_data)
         repository.save_google_calendar_connection(
@@ -108,7 +108,7 @@ class GoogleCalendarService:
                 self._request_json(
                     GOOGLE_REVOKE_URL,
                     form={"token": token},
-                    error_message="Google 권한 해제에 실패했어.",
+                    error_message="Google 권한 해제에 실패했습니다.",
                     allow_empty=True,
                 )
             except HTTPException:
@@ -130,7 +130,7 @@ class GoogleCalendarService:
         if not connection:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="먼저 Google Calendar를 연결해줘.",
+                detail="먼저 Google Calendar를 연결해 주세요.",
             )
         credentials = self._decrypt(connection["encrypted_credentials"])
         credentials = self._refresh_if_needed(repository, credentials)
@@ -146,7 +146,7 @@ class GoogleCalendarService:
             GOOGLE_CALENDAR_EVENTS_URL,
             json_body=body,
             bearer_token=credentials["access_token"],
-            error_message="Google Calendar에 일정을 등록하지 못했어.",
+            error_message="Google Calendar에 일정을 등록하지 못했습니다.",
             conflict_url=(
                 f"{GOOGLE_CALENDAR_EVENTS_URL}/{event_id}" if event_id else None
             ),
@@ -169,7 +169,7 @@ class GoogleCalendarService:
                 "refresh_token": credentials["refresh_token"],
                 "grant_type": "refresh_token",
             },
-            error_message="Google Calendar 인증을 갱신하지 못했어.",
+            error_message="Google Calendar 인증을 갱신하지 못했습니다.",
         )
         credentials.update(refreshed)
         credentials["expires_at"] = self._expires_at(refreshed)
@@ -216,7 +216,7 @@ class GoogleCalendarService:
         except (ValueError, TypeError, json.JSONDecodeError) as error:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Google 연결 요청이 만료됐거나 올바르지 않아. 다시 시도해줘.",
+                detail="Google 연결 요청이 만료되었거나 올바르지 않습니다. 다시 시도해 주세요.",
             ) from error
 
     def _encrypt(self, value: dict[str, Any]) -> str:
@@ -228,7 +228,7 @@ class GoogleCalendarService:
         except (InvalidToken, json.JSONDecodeError) as error:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="저장된 Google 연결 정보를 읽지 못했어.",
+                detail="저장된 Google 연결 정보를 읽지 못했습니다.",
             ) from error
 
     def _fernet(self) -> Fernet:
@@ -238,7 +238,7 @@ class GoogleCalendarService:
         except (ValueError, AttributeError) as error:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="GOOGLE_TOKEN_ENCRYPTION_KEY 설정이 올바르지 않아.",
+                detail="GOOGLE_TOKEN_ENCRYPTION_KEY 설정이 올바르지 않습니다.",
             ) from error
 
     @staticmethod

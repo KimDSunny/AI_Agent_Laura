@@ -14,16 +14,16 @@ export default function HomeScreen({ onStart }) {
         <div className="buttons">
           <button className="btn start" type="button" onClick={onStart}>Start</button>
         </div>
-        <div className="links"><a href="#">Safety ⊘ Notice</a></div>
+        <div className="links"><span>Safety ⊘ Notice</span></div>
       </main>
 
       <footer>
-        <div className="about-link"><a href="#">What is PLANET?</a></div>
+        <div className="about-link"><span>What is PLANET?</span></div>
         <div>
-          <a href="#">Contact Us</a>&nbsp;|&nbsp;<a href="#">Privacy Notice</a>
+          <span>Contact Us</span>&nbsp;|&nbsp;<span>Privacy Notice</span>
         </div>
         <div style={{ marginTop: 7 }}>
-          Copyright © UNP. Inc. <a href="#">All rights reserved.</a>
+          Copyright © UNP. Inc. <span>All rights reserved.</span>
         </div>
       </footer>
     </>

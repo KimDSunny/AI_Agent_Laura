@@ -28,11 +28,11 @@ function DesktopMenu() {
         <span>PLANET</span>
       </div>
 
-      <nav className="desktop-nav" aria-label="프로그램 메뉴">
+      <div className="desktop-nav" aria-label="프로그램 메뉴">
         {['File', 'Search', 'Edit', 'View', 'Help'].map((menu) => (
-          <a href="#" key={menu}>{menu}</a>
+          <span key={menu}>{menu}</span>
         ))}
-      </nav>
+      </div>
 
       <time className="desktop-clock">{clock}</time>
     </header>
@@ -54,24 +54,28 @@ function DesktopShortcuts() {
   );
 }
 
-function Taskbar({ isOpen, onOpenPlanet }) {
+function Taskbar({ isOpen, onOpenPlanet, onResetDemo }) {
   return (
     <nav className="desktop-taskbar" aria-label="작업 표시줄">
-      <button className="task-start" type="button">START</button>
+      <span className="task-start">START</span>
       <button className="task-item" type="button" aria-pressed={isOpen} onClick={onOpenPlanet}>➜ Planet</button>
-      <button className="task-item" type="button">➜ Gallery</button>
+      <button className="task-item" type="button" onClick={onResetDemo}>↻ 데모 초기화</button>
       <div className="task-tray" aria-hidden="true" />
     </nav>
   );
 }
 
-export default function Desktop({ windowMode, onOpenPlanet, ...windowProps }) {
+export default function Desktop({ windowMode, onOpenPlanet, onResetDemo, ...windowProps }) {
   return (
     <div className="desktop">
       <DesktopMenu />
       <DesktopShortcuts />
       <PlanetWindow windowMode={windowMode} {...windowProps} />
-      <Taskbar isOpen={windowMode === 'open' || windowMode === 'maximized'} onOpenPlanet={onOpenPlanet} />
+      <Taskbar
+        isOpen={windowMode === 'open' || windowMode === 'maximized'}
+        onOpenPlanet={onOpenPlanet}
+        onResetDemo={onResetDemo}
+      />
     </div>
   );
 }

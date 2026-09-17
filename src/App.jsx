@@ -6,6 +6,7 @@ import {
   ensureSession,
   executeAgentAction,
   getConversation,
+  getProfile,
   getTeamMessages,
   resetProfile,
   saveProfile,
@@ -95,12 +96,14 @@ export default function App() {
     const restoreSession = async () => {
       try {
         await ensureSession();
-        await resetProfile();
+        const savedProfile = await getProfile();
         if (cancelled) return;
+        const savedTeamIndex = savedProfile ? departments.indexOf(savedProfile.team) : -1;
+        const restoredTeamIndex = savedTeamIndex >= 0 ? savedTeamIndex : 0;
         setSessionReady(true);
-        setStage('home');
-        setDepartmentIndex(0);
-        setActiveTeam(0);
+        setStage(savedProfile ? 'chat' : 'home');
+        setDepartmentIndex(restoredTeamIndex);
+        setActiveTeam(restoredTeamIndex);
         setIsLauraChat(true);
         setWelcomeOpen(false);
         setFeatureMode(false);
@@ -118,6 +121,31 @@ export default function App() {
       cancelled = true;
     };
   }, []);
+
+  const resetDemo = async () => {
+    const confirmed = window.confirm(
+      '온보딩 프로필과 대화 기록을 초기화할까요? Google Calendar 연결은 유지됩니다.',
+    );
+    if (!confirmed) return;
+
+    try {
+      await resetProfile();
+      setStage('home');
+      setWindowMode('open');
+      setDepartmentIndex(0);
+      setActiveTeam(0);
+      setIsLauraChat(true);
+      setWelcomeOpen(false);
+      setFeatureMode(false);
+      setFeatureIndex(0);
+      setLauraArrived(false);
+      setMessages([initialMessage]);
+      setAgentActivity(null);
+      setFailedRequest(null);
+    } catch (error) {
+      window.alert(error.message || '데모를 초기화하지 못했습니다.');
+    }
+  };
 
   useEffect(() => {
     if (stage !== 'chat' || !sessionReady) return undefined;
@@ -319,7 +347,7 @@ export default function App() {
     } catch (error) {
       setMessages((current) => [
         ...current,
-        { id: Date.now(), sender: 'agent', text: `업무 취소에 실패했어. ${error.message}` },
+        { id: Date.now(), sender: 'agent', text: `업무 취소에 실패했습니다. ${error.message}` },
       ]);
       return;
     }
@@ -356,7 +384,7 @@ export default function App() {
       )));
       setMessages((current) => [
         ...current,
-        { id: Date.now(), sender: 'agent', text: `업무 실행에 실패했어. ${error.message}` },
+        { id: Date.now(), sender: 'agent', text: `업무 실행에 실패했습니다. ${error.message}` },
       ]);
       return;
     }
@@ -429,6 +457,7 @@ export default function App() {
         onLauraChat={openLauraChat}
         onOpenPlanet={() => setWindowMode('open')}
         onPlayButtonSound={playClickSound}
+        onResetDemo={resetDemo}
         onRetry={retryLastRequest}
         onSendMessage={sendMessage}
         onStageChange={setStage}

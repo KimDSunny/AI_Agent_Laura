@@ -32,7 +32,7 @@ export default function DepartmentSetup({
     try {
       await onFinishProfile({ employeeName, hireDate });
     } catch (error) {
-      setProfileMessage(error.message || '입사 정보를 저장하지 못했어.');
+      setProfileMessage(error.message || '입사 정보를 저장하지 못했습니다.');
     }
   };
 

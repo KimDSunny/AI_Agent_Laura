@@ -79,10 +79,9 @@
       gap: 46px;
     }
 
-    .desktop-nav a {
+    .desktop-nav span {
       color: #fff;
-      text-decoration: underline;
-      text-underline-offset: 3px;
+      opacity: 0.9;
     }
 
     .desktop-clock {
@@ -159,6 +158,8 @@
     }
 
     .task-start {
+      display: flex;
+      align-items: center;
       width: 108px;
       padding-left: 22px;
 
@@ -166,6 +167,7 @@
       color: #ddd;
       font-weight: bold;
       letter-spacing: 1px;
+      cursor: default;
     }
 
     .task-item {
@@ -546,9 +548,8 @@
       line-height: 1.5;
     }
 
-    .links a {
+    .links span {
       color: #455794;
-      text-decoration: underline;
     }
 
     /* 하단 */
@@ -573,9 +574,8 @@
       color: #333;
     }
 
-    footer a {
+    footer span {
       color: #49548b;
-      text-decoration: underline;
     }
 
     .about-link {

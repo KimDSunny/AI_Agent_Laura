@@ -47,7 +47,7 @@ async def google_calendar_callback(
             status_code=status.HTTP_303_SEE_OTHER,
         )
     if not code or not state_token:
-        raise HTTPException(status_code=400, detail="Google 인증 응답이 올바르지 않아.")
+        raise HTTPException(status_code=400, detail="Google 인증 응답이 올바르지 않습니다.")
     resume_action_id = await asyncio.to_thread(
         google_calendar_service.connect,
         repository,
