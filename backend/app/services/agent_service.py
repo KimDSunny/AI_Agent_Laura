@@ -98,6 +98,16 @@ class AgentService:
         references: list[DocumentReference] | None = None,
         on_status: Callable[[dict[str, str | None]], Awaitable[None]] | None = None,
     ) -> ChatResponse:
+        if self._is_schedule_request(request.message):
+            missing_schedule_fields = self._missing_schedule_fields(request.message)
+            if missing_schedule_fields:
+                if on_status:
+                    await on_status({"phase": "answering", "label": "필수 일정 정보 확인", "tool": None})
+                return ChatResponse(
+                    text=self._schedule_clarification(missing_schedule_fields),
+                    conversation_id=request.conversation_id,
+                )
+
         settings = get_settings()
         if self.force_fallback or not settings.openai_configured or repository is None:
             if on_status:
@@ -138,6 +148,9 @@ class AgentService:
             for item in state.get("history", [])
         ]
         messages.append({"role": "user", "content": request.message})
+        if self._is_current_projects_question(request.message):
+            await self._emit_status(state, "tool_selected", "현재 프로젝트 조회 선택", "get_current_projects")
+            return {"tool_name": "get_current_projects", "tool_arguments": {}}
         instructions = f"""
 너는 PLANET 사내 온보딩 AI Agent Laura다. 현재 시각은 {now.isoformat()}, 시간대는 Asia/Seoul이다.
 사용자의 요청에 맞는 도구 하나를 선택하라. 상대 날짜는 현재 시각을 기준으로 ISO 8601로 계산한다.
@@ -261,6 +274,7 @@ class AgentService:
         instructions = """
 너는 PLANET 신입사원의 적응을 돕는 AI Agent Laura다. 제공된 사내 문서 근거만 사용해 현재 질문에 답한다.
 - 질문이 요구한 정보부터 바로 답하고, 관련 없는 배경 설명은 빼라.
+- 현재 프로젝트 전체를 묻는 질문에는 근거에 있는 프로젝트를 빠짐없이 각각 이름으로 나열한다.
 - 예/아니요로 답할 수 있는 질문은 첫 문장에서 원칙적인 답을 분명히 말하고 예외를 뒤에 설명한다.
 - 간단한 사실 질문은 1문장, 일반 질문은 2~4문장으로 답한다.
 - 기본 답변은 350자 이내로 쓴다. 여러 항목을 비교하거나 나열할 때만 최대 500자까지 허용한다.
@@ -439,6 +453,22 @@ class AgentService:
     def _is_unavailable_answer(text: str) -> bool:
         return text.strip().rstrip(".!?") == "확인할 수 없습니다"
 
+    @staticmethod
+    def _is_schedule_request(message: str) -> bool:
+        compact = message.replace(" ", "")
+        return (
+            any(keyword in compact for keyword in ("일정", "캘린더", "미팅", "회의", "교육"))
+            and any(keyword in compact for keyword in ("등록", "추가", "예약", "잡아"))
+        )
+
+    @staticmethod
+    def _is_current_projects_question(message: str) -> bool:
+        compact = message.replace(" ", "").lower()
+        return (
+            "프로젝트" in compact
+            and any(keyword in compact for keyword in ("현재", "진행중", "어떤", "뭐", "목록", "전체"))
+        )
+
     @classmethod
     def _composed_response(
         cls,
@@ -504,7 +534,7 @@ class AgentService:
 
     def _fallback_response(self, request: ChatRequest, references: list[DocumentReference]) -> ChatResponse:
         compact = request.message.replace(" ", "")
-        if any(k in compact for k in ("일정", "교육", "캘린더", "미팅", "회의")) and any(k in compact for k in ("등록", "추가", "예약", "잡아")):
+        if self._is_schedule_request(request.message):
             schedule = self._parse_schedule(request.message)
             if schedule is None:
                 missing = self._missing_schedule_fields(request.message)

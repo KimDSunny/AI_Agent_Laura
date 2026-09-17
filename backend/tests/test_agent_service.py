@@ -229,6 +229,11 @@ def test_unavailable_composed_answer_does_not_expose_irrelevant_source() -> None
     assert response.sources == []
 
 
+def test_current_projects_intent_is_detected_without_model_judgment() -> None:
+    assert AgentService._is_current_projects_question("현재 어떤 프로젝트를 진행하고 있어?") is True
+    assert AgentService._is_current_projects_question("Laura 프로젝트 담당자는 누구야?") is False
+
+
 def test_langgraph_current_projects_tool_returns_source(fake_repository):
     service = PlannedAgent("get_current_projects", {})
     response = asyncio.run(
