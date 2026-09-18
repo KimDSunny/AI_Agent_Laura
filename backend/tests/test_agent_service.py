@@ -203,6 +203,7 @@ def test_plain_text_removes_markdown_emphasis() -> None:
 
 def test_unavailable_answer_accepts_terminal_punctuation() -> None:
     assert AgentService._is_unavailable_answer("확인할 수 없습니다.") is True
+    assert AgentService._is_unavailable_answer("두 번째 프로젝트는 확인할 수 없습니다.") is True
 
 
 def test_unavailable_composed_answer_does_not_expose_irrelevant_source() -> None:
@@ -258,6 +259,7 @@ def test_ordinal_project_follow_up_resolves_previous_list_order() -> None:
         history,
     ) == "Orbit Workspace Admin"
     assert AgentService._resolve_ordinal_project("두 번째 프로젝트는?", history) == "Laura Onboarding Agent v1.0"
+    assert AgentService._resolve_ordinal_project("3번째 프로젝트는 뭐야?", history) == "Compass People Analytics"
 
 
 def test_wrong_project_list_tool_is_corrected_for_ordinal_follow_up(fake_repository) -> None:
@@ -293,6 +295,52 @@ def test_wrong_project_list_tool_is_corrected_for_ordinal_follow_up(fake_reposit
 
     assert "Orbit" in response.text
     assert "Laura Onboarding Agent" not in response.text
+
+
+def test_second_and_third_project_follow_ups_return_exact_project_sections(fake_repository) -> None:
+    conversation_id = "later-ordinal-project-follow-up"
+    fake_repository.conversations[(conversation_id, "개발팀")] = [
+        type("Message", (), {"sender": "user", "text": "현재 프로젝트 알려줘"})(),
+        type(
+            "Message",
+            (),
+            {
+                "sender": "agent",
+                "text": (
+                    "현재 진행 중인 프로젝트는 다음 3개입니다.\n"
+                    "• Orbit Workspace Admin\n"
+                    "• Laura Onboarding Agent v1.0\n"
+                    "• Compass People Analytics"
+                ),
+            },
+        )(),
+    ]
+
+    second = asyncio.run(
+        PlannedAgent("search_company_documents", {"query": "Laura 프로젝트 설명"}).chat(
+            ChatRequest(
+                message="두번째 프로젝트는 뭐지?",
+                team="개발팀",
+                conversation_id=conversation_id,
+            ),
+            repository=fake_repository,
+        )
+    )
+    third = asyncio.run(
+        PlannedAgent("get_current_projects", {}).chat(
+            ChatRequest(
+                message="3번째 프로젝트는 뭐야?",
+                team="개발팀",
+                conversation_id=conversation_id,
+            ),
+            repository=fake_repository,
+        )
+    )
+
+    assert second.text.startswith("Laura 서비스")
+    assert second.sources[0].section == "Laura Onboarding Agent v1.0"
+    assert third.text.startswith("Compass는")
+    assert third.sources[0].section == "Compass People Analytics"
 
 
 def test_langgraph_current_projects_tool_returns_source(fake_repository):

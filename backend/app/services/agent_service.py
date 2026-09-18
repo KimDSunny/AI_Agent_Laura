@@ -253,10 +253,15 @@ class AgentService:
             references = await self._retry_tool(repository.search_documents, request.message, request.team)
             return {"response": await self._compose_grounded_answer(state, references)}
         ordinal_project = self._resolve_ordinal_project(request.message, state.get("history", []))
-        if name == "get_current_projects" and ordinal_project:
-            query = f"{ordinal_project} 프로젝트 설명"
-            references = await self._retry_tool(repository.search_documents, query, request.team)
-            return {"response": await self._compose_grounded_answer(state, references)}
+        if ordinal_project:
+            references = await self._retry_tool(
+                repository.search_documents,
+                "현재 진행 중인 프로젝트 전체",
+                request.team,
+            )
+            return {
+                "response": self._project_detail_response(request, ordinal_project, references)
+            }
 
         query = "현재 진행 중인 프로젝트 전체" if name == "get_current_projects" else arguments.get("query", request.message)
         query = self._contextualize_query(query, state.get("history", []), request.message)
@@ -466,7 +471,7 @@ class AgentService:
 
     @staticmethod
     def _is_unavailable_answer(text: str) -> bool:
-        return text.strip().rstrip(".!?") == "확인할 수 없습니다"
+        return "확인할 수 없습니다" in text
 
     @staticmethod
     def _is_schedule_request(message: str) -> bool:
@@ -570,6 +575,37 @@ class AgentService:
                     relevant_sentence=reference.content,
                 )
                 for reference in project_references
+            ],
+        )
+
+    @staticmethod
+    def _project_detail_response(
+        request: ChatRequest,
+        project_name: str,
+        references: list[DocumentReference],
+    ) -> ChatResponse:
+        selected = next(
+            (
+                reference
+                for reference in references
+                if reference.section.casefold() == project_name.casefold()
+            ),
+            None,
+        )
+        if selected is None:
+            return ChatResponse(
+                text="확인할 수 없습니다",
+                conversation_id=request.conversation_id,
+            )
+        return ChatResponse(
+            text=selected.content,
+            conversation_id=request.conversation_id,
+            sources=[
+                Source(
+                    title=selected.title,
+                    section=selected.section,
+                    relevant_sentence=selected.content,
+                )
             ],
         )
 
