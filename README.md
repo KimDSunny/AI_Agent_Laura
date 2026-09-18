@@ -1,4 +1,4 @@
-# PLANET Laura
+# AI_Agent Laura
 
 > 사내 지식을 근거로 답하고, 사용자의 승인을 받아 실제 업무까지 수행하는 신입사원 온보딩 AI Agent
 
