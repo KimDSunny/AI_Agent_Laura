@@ -232,6 +232,67 @@ def test_unavailable_composed_answer_does_not_expose_irrelevant_source() -> None
 def test_current_projects_intent_is_detected_without_model_judgment() -> None:
     assert AgentService._is_current_projects_question("현재 어떤 프로젝트를 진행하고 있어?") is True
     assert AgentService._is_current_projects_question("Laura 프로젝트 담당자는 누구야?") is False
+    assert AgentService._is_current_projects_question("첫 번째 프로젝트에 대해서 설명해줘") is False
+
+
+def test_ordinal_project_follow_up_resolves_previous_list_order() -> None:
+    history = [
+        type("Message", (), {"sender": "user", "text": "현재 어떤 프로젝트를 진행하고 있어?"})(),
+        type(
+            "Message",
+            (),
+            {
+                "sender": "agent",
+                "text": (
+                    "현재 진행 중인 프로젝트는 다음 3개입니다.\n"
+                    "• Orbit Workspace Admin\n"
+                    "• Laura Onboarding Agent v1.0\n"
+                    "• Compass People Analytics"
+                ),
+            },
+        )(),
+    ]
+
+    assert AgentService._resolve_ordinal_project(
+        "첫번째 프로젝트에 대해서 설명해줘",
+        history,
+    ) == "Orbit Workspace Admin"
+    assert AgentService._resolve_ordinal_project("두 번째 프로젝트는?", history) == "Laura Onboarding Agent v1.0"
+
+
+def test_wrong_project_list_tool_is_corrected_for_ordinal_follow_up(fake_repository) -> None:
+    service = PlannedAgent("get_current_projects", {})
+    conversation_id = "ordinal-project-follow-up"
+    fake_repository.conversations[(conversation_id, "개발팀")] = [
+        type("Message", (), {"sender": "user", "text": "현재 프로젝트 알려줘"})(),
+        type(
+            "Message",
+            (),
+            {
+                "sender": "agent",
+                "text": (
+                    "현재 진행 중인 프로젝트는 다음 3개입니다.\n"
+                    "• Orbit Workspace Admin\n"
+                    "• Laura Onboarding Agent v1.0\n"
+                    "• Compass People Analytics"
+                ),
+            },
+        )(),
+    ]
+
+    response = asyncio.run(
+        service.chat(
+            ChatRequest(
+                message="첫 번째 프로젝트에 대해서 설명해줘",
+                team="개발팀",
+                conversation_id=conversation_id,
+            ),
+            repository=fake_repository,
+        )
+    )
+
+    assert "Orbit" in response.text
+    assert "Laura Onboarding Agent" not in response.text
 
 
 def test_langgraph_current_projects_tool_returns_source(fake_repository):

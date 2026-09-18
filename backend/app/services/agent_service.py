@@ -148,6 +148,13 @@ class AgentService:
             for item in state.get("history", [])
         ]
         messages.append({"role": "user", "content": request.message})
+        ordinal_project = self._resolve_ordinal_project(request.message, state.get("history", []))
+        if ordinal_project:
+            await self._emit_status(state, "tool_selected", "사내 문서 검색 선택", "search_company_documents")
+            return {
+                "tool_name": "search_company_documents",
+                "tool_arguments": {"query": f"{ordinal_project} 프로젝트 설명"},
+            }
         if self._is_current_projects_question(request.message):
             await self._emit_status(state, "tool_selected", "현재 프로젝트 조회 선택", "get_current_projects")
             return {"tool_name": "get_current_projects", "tool_arguments": {}}
@@ -245,6 +252,12 @@ class AgentService:
                 return {"response": ChatResponse(text=text, conversation_id=request.conversation_id)}
             references = await self._retry_tool(repository.search_documents, request.message, request.team)
             return {"response": await self._compose_grounded_answer(state, references)}
+        ordinal_project = self._resolve_ordinal_project(request.message, state.get("history", []))
+        if name == "get_current_projects" and ordinal_project:
+            query = f"{ordinal_project} 프로젝트 설명"
+            references = await self._retry_tool(repository.search_documents, query, request.team)
+            return {"response": await self._compose_grounded_answer(state, references)}
+
         query = "현재 진행 중인 프로젝트 전체" if name == "get_current_projects" else arguments.get("query", request.message)
         query = self._contextualize_query(query, state.get("history", []), request.message)
         references = await self._retry_tool(repository.search_documents, query, request.team)
@@ -469,7 +482,47 @@ class AgentService:
         return (
             "프로젝트" in compact
             and any(keyword in compact for keyword in ("현재", "진행중", "어떤", "뭐", "목록", "전체"))
+            and not AgentService._is_ordinal_project_question(message)
         )
+
+    @staticmethod
+    def _is_ordinal_project_question(message: str) -> bool:
+        compact = message.replace(" ", "").lower()
+        ordinal_words = (
+            "첫번째", "첫째", "1번째", "1번",
+            "두번째", "둘째", "2번째", "2번",
+            "세번째", "셋째", "3번째", "3번",
+        )
+        return "프로젝트" in compact and any(word in compact for word in ordinal_words)
+
+    @classmethod
+    def _resolve_ordinal_project(cls, message: str, history: list[Any]) -> str | None:
+        if not cls._is_ordinal_project_question(message):
+            return None
+
+        compact = message.replace(" ", "").lower()
+        ordinal_groups = (
+            ("첫번째", "첫째", "1번째", "1번"),
+            ("두번째", "둘째", "2번째", "2번"),
+            ("세번째", "셋째", "3번째", "3번"),
+        )
+        index = next(
+            (position for position, words in enumerate(ordinal_groups) if any(word in compact for word in words)),
+            None,
+        )
+        if index is None:
+            return None
+
+        for item in reversed(history):
+            if item.sender != "agent":
+                continue
+            projects = [
+                project.strip()
+                for project in re.findall(r"(?m)^\s*•\s*([^\n]+?)\s*$", item.text)
+            ]
+            if len(projects) > index:
+                return projects[index]
+        return None
 
     @classmethod
     def _composed_response(
