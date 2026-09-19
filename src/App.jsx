@@ -37,6 +37,7 @@ export default function App() {
   const [featureMode, setFeatureMode] = useState(false);
   const [featureIndex, setFeatureIndex] = useState(0);
   const [lauraArrived, setLauraArrived] = useState(false);
+  const [isShutDown, setIsShutDown] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
   const [messages, setMessages] = useState([initialMessage]);
   const [isReplying, setIsReplying] = useState(false);
@@ -124,13 +125,14 @@ export default function App() {
 
   const resetDemo = async () => {
     const confirmed = window.confirm(
-      '온보딩 프로필과 대화 기록을 초기화할까요? Google Calendar 연결은 유지됩니다.',
+      '데모를 새로 시작할까요? 온보딩 프로필과 대화 기록은 초기화되고 Google Calendar 연결은 유지됩니다.',
     );
     if (!confirmed) return;
 
     try {
       await resetProfile();
       setStage('home');
+      setIsShutDown(false);
       setWindowMode('open');
       setDepartmentIndex(0);
       setActiveTeam(0);
@@ -145,6 +147,12 @@ export default function App() {
     } catch (error) {
       window.alert(error.message || '데모를 초기화하지 못했습니다.');
     }
+  };
+
+  const shutdownSite = () => {
+    setIsShutDown(true);
+    setWindowMode('closed');
+    if (window.opener) window.close();
   };
 
   useEffect(() => {
@@ -436,6 +444,7 @@ export default function App() {
         featureMode={featureMode}
         isReplying={isReplying}
         isLauraChat={isLauraChat}
+        isShutDown={isShutDown}
         lauraArrived={lauraArrived}
         memberTeamIndex={departmentIndex}
         messages={messages}
@@ -458,6 +467,7 @@ export default function App() {
         onOpenPlanet={() => setWindowMode('open')}
         onPlayButtonSound={playClickSound}
         onResetDemo={resetDemo}
+        onShutdown={shutdownSite}
         onRetry={retryLastRequest}
         onSendMessage={sendMessage}
         onStageChange={setStage}

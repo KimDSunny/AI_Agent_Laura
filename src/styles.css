@@ -110,6 +110,11 @@
       text-shadow: 1px 1px 2px #003b71;
     }
 
+    .desktop-shortcut span:last-child {
+      font-weight: bold;
+      letter-spacing: 0.3px;
+    }
+
     .shortcut-icon {
       display: grid;
       place-items: center;
@@ -167,7 +172,83 @@
       color: #ddd;
       font-weight: bold;
       letter-spacing: 1px;
-      cursor: default;
+      cursor: pointer;
+    }
+
+    .task-start.active {
+      border-top-color: #696969;
+      border-left-color: #696969;
+      border-right-color: #fff;
+      border-bottom-color: #fff;
+      background: #202020;
+    }
+
+    .start-area {
+      position: relative;
+      display: flex;
+    }
+
+    .start-menu {
+      position: absolute;
+      z-index: 60;
+      bottom: 40px;
+      left: 0;
+      width: 248px;
+      min-height: 150px;
+      display: flex;
+      border: 2px solid #f5f5f5;
+      border-right-color: #555;
+      border-bottom-color: #555;
+      background: #c7c7c7;
+      box-shadow: 4px 5px 0 rgba(0, 28, 55, 0.35);
+    }
+
+    .start-menu-brand {
+      width: 42px;
+      padding: 12px 8px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      background: linear-gradient(#144c88, #062e5c);
+      color: #fff;
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+    }
+
+    .start-menu-actions {
+      flex: 1;
+      padding: 14px 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .start-menu-actions button,
+    .gallery-toolbar button {
+      min-height: 42px;
+      padding: 8px 12px;
+      border: 2px solid #fff;
+      border-right-color: #666;
+      border-bottom-color: #666;
+      background: #ddd;
+      color: #222;
+      font-family: inherit;
+      font-size: 13px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .start-menu-actions button:hover,
+    .start-menu-actions button:focus-visible,
+    .gallery-toolbar button:hover,
+    .gallery-toolbar button:focus-visible {
+      background: #eef6ff;
+      outline: 1px dotted #123f70;
+      outline-offset: -5px;
     }
 
     .task-item {
@@ -184,6 +265,154 @@
       border-right: 2px solid #eee;
       border-bottom: 2px solid #eee;
       background: repeating-linear-gradient(90deg, #777 0 2px, #d1d1d1 2px 5px);
+    }
+
+    .gallery-window {
+      position: absolute;
+      z-index: 25;
+      right: 30px;
+      bottom: 62px;
+      width: min(620px, calc(100vw - 60px));
+      height: min(470px, calc(100vh - 130px));
+      overflow: hidden;
+      border: 3px solid #68737b;
+      background: #e3e3e3;
+      box-shadow: 8px 10px 18px rgba(0, 31, 69, 0.48);
+    }
+
+    .gallery-titlebar {
+      height: 36px;
+      padding: 4px 5px 4px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(90deg, #0c417b, #168fc0);
+      color: #fff;
+      letter-spacing: 0.5px;
+    }
+
+    .gallery-titlebar button {
+      width: 27px;
+      height: 25px;
+      border: 2px solid #fff;
+      border-right-color: #555;
+      border-bottom-color: #555;
+      background: #c9c9c9;
+      color: #222;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .gallery-toolbar {
+      min-height: 64px;
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #8c8c8c;
+      background: #d5d5d5;
+    }
+
+    .gallery-toolbar button {
+      min-height: 38px;
+      flex: 0 0 auto;
+    }
+
+    .gallery-toolbar span {
+      color: #555;
+      font-size: 12px;
+    }
+
+    .gallery-grid {
+      height: calc(100% - 100px);
+      padding: 14px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-content: start;
+      gap: 12px;
+      overflow-y: auto;
+      background: #f2f2f2;
+    }
+
+    .gallery-photo {
+      position: relative;
+      min-width: 0;
+      padding: 7px;
+      border: 1px solid #aaa;
+      background: #fff;
+      box-shadow: 2px 2px 0 #c2c2c2;
+    }
+
+    .gallery-photo img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      background: #ddd;
+    }
+
+    .gallery-photo figcaption {
+      margin-top: 6px;
+      overflow: hidden;
+      color: #333;
+      font-size: 11px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .gallery-photo > button {
+      position: absolute;
+      top: 9px;
+      right: 9px;
+      width: 23px;
+      height: 23px;
+      border: 1px solid #fff;
+      background: rgba(21, 34, 49, 0.82);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .gallery-empty {
+      grid-column: 1 / -1;
+      min-height: 260px;
+      display: grid;
+      place-content: center;
+      gap: 12px;
+      color: #727272;
+      text-align: center;
+    }
+
+    .gallery-empty span {
+      font-size: 54px;
+    }
+
+    .shutdown-screen {
+      position: fixed;
+      z-index: 999;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      background: #020817;
+      color: #dff8ff;
+      text-align: center;
+    }
+
+    .shutdown-screen img {
+      width: 92px;
+      filter: grayscale(0.25) drop-shadow(0 0 18px rgba(57, 201, 255, 0.35));
+    }
+
+    .shutdown-screen strong {
+      font-size: 20px;
+      letter-spacing: 1px;
+    }
+
+    .shutdown-screen span {
+      color: #8aa8bc;
+      font-size: 13px;
     }
 
     /* 중앙 프로그램 창 */
@@ -2758,13 +2987,31 @@
       }
 
       .task-item {
-        width: 112px;
+        width: 104px;
         padding-left: 8px;
       }
 
-      .task-item:nth-of-type(3),
       .task-tray {
         display: none;
+      }
+
+      .start-menu {
+        width: 220px;
+      }
+
+      .gallery-window {
+        right: 10px;
+        bottom: 54px;
+        width: calc(100vw - 20px);
+        height: calc(100vh - 112px);
+      }
+
+      .gallery-toolbar span {
+        display: none;
+      }
+
+      .gallery-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
 
