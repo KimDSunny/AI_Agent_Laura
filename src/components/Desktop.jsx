@@ -39,14 +39,40 @@ function DesktopMenu() {
   );
 }
 
-function DesktopShortcuts() {
+function DesktopShortcuts({ onAboutMeOpen, onGalleryOpen }) {
   return (
     <aside className="desktop-icons" aria-label="바탕화면 바로가기">
-      <div className="desktop-shortcut">
+      <button className="desktop-shortcut" type="button" onClick={onAboutMeOpen}>
         <span className="shortcut-icon" aria-hidden="true">💗</span>
         <span>About me</span>
-      </div>
+      </button>
+      <button className="desktop-shortcut" type="button" onClick={onGalleryOpen}>
+        <span className="shortcut-icon" aria-hidden="true">🖼️</span>
+        <span>Gallery</span>
+      </button>
     </aside>
+  );
+}
+
+function AboutMe({ isOpen, onClose }) {
+  if (!isOpen) return null;
+
+  return (
+    <section className="about-window" aria-label="About me 영상">
+      <header className="about-titlebar">
+        <strong>About me</strong>
+        <button type="button" aria-label="About me 닫기" onClick={onClose}>×</button>
+      </header>
+      <div className="about-video-frame">
+        <iframe
+          src="https://www.youtube.com/embed/Tycpqn1ZhPk?rel=0"
+          title="About me"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerPolicy="strict-origin-when-cross-origin"
+          allowFullScreen
+        />
+      </div>
+    </section>
   );
 }
 
@@ -151,6 +177,7 @@ function Taskbar({ isOpen, onGalleryOpen, onOpenPlanet, onResetDemo, onShutdown 
 }
 
 export default function Desktop({ isShutDown, windowMode, onOpenPlanet, onResetDemo, onShutdown, ...windowProps }) {
+  const [aboutMeOpen, setAboutMeOpen] = useState(false);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryImages, setGalleryImages] = useState([]);
   const imageUrlsRef = useRef(new Set());
@@ -184,6 +211,33 @@ export default function Desktop({ isShutDown, windowMode, onOpenPlanet, onResetD
     }));
   };
 
+  const minimizePlanet = () => {
+    windowProps.onWindowModeChange?.('minimized');
+  };
+
+  const openAboutMe = () => {
+    setGalleryOpen(false);
+    setAboutMeOpen(true);
+    minimizePlanet();
+  };
+
+  const openDesktopGallery = () => {
+    setAboutMeOpen(false);
+    setGalleryOpen(true);
+    minimizePlanet();
+  };
+
+  const openTaskbarGallery = () => {
+    setAboutMeOpen(false);
+    setGalleryOpen(true);
+  };
+
+  const openPlanet = () => {
+    setAboutMeOpen(false);
+    setGalleryOpen(false);
+    onOpenPlanet();
+  };
+
   if (isShutDown) {
     return (
       <main className="shutdown-screen" aria-label="PLANET 종료됨">
@@ -197,8 +251,12 @@ export default function Desktop({ isShutDown, windowMode, onOpenPlanet, onResetD
   return (
     <div className="desktop">
       <DesktopMenu />
-      <DesktopShortcuts />
+      <DesktopShortcuts
+        onAboutMeOpen={openAboutMe}
+        onGalleryOpen={openDesktopGallery}
+      />
       <PlanetWindow windowMode={windowMode} {...windowProps} />
+      <AboutMe isOpen={aboutMeOpen} onClose={() => setAboutMeOpen(false)} />
       <Gallery
         images={galleryImages}
         isOpen={galleryOpen}
@@ -208,8 +266,8 @@ export default function Desktop({ isShutDown, windowMode, onOpenPlanet, onResetD
       />
       <Taskbar
         isOpen={windowMode === 'open' || windowMode === 'maximized'}
-        onGalleryOpen={() => setGalleryOpen(true)}
-        onOpenPlanet={onOpenPlanet}
+        onGalleryOpen={openTaskbarGallery}
+        onOpenPlanet={openPlanet}
         onResetDemo={onResetDemo}
         onShutdown={onShutdown}
       />

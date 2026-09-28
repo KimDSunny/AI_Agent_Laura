@@ -9,7 +9,6 @@ function WindowChrome({ windowMode, onWindowModeChange }) {
   return (
     <>
       <div className="top-bar">
-        www.unknownpla.net
         <div className="window-buttons">
           <button className="window-btn" type="button" aria-label="창 최소화" onClick={() => onWindowModeChange('minimized')}>−</button>
           <button
