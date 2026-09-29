@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -35,6 +35,11 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    @field_validator("frontend_url", "google_oauth_redirect_uri", mode="before")
+    @classmethod
+    def strip_url_whitespace(cls, value: object) -> object:
+        return value.strip() if isinstance(value, str) else value
 
     @property
     def allowed_origins(self) -> list[str]:
