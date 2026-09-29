@@ -11,7 +11,7 @@ function AgentMessage({ item, onApproveAction, onDeclineAction }) {
 
   return (
     <div className="agent-message-group">
-      <p className="chat-bubble">{item.text}</p>
+      {item.text?.trim() && <p className="chat-bubble">{item.text}</p>}
       {sourceDocuments.map((source) => <SourceCard source={source} key={`${item.id}-${source.title}`} />)}
       {item.action && (
         <ApprovalDialog

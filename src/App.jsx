@@ -215,8 +215,13 @@ export default function App() {
   }, []);
 
   const finishProfile = async (profile) => {
-    await saveProfile({ ...profile, team: departments[departmentIndex] });
     setStage('loading');
+    try {
+      await saveProfile({ ...profile, team: departments[departmentIndex] });
+    } catch (error) {
+      setStage('profile');
+      throw error;
+    }
     const voice = completionVoiceRef.current;
 
     const finishLoading = () => {
