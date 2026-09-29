@@ -1,6 +1,79 @@
 import { useEffect, useRef, useState } from 'react';
 import PlanetWindow from './PlanetWindow';
 
+const GALLERY_FOLDERS = [
+  {
+    id: 'AI_agent',
+    label: 'AI_agent',
+    files: [
+      'KakaoTalk_Photo_2026-09-29-09-20-13 001.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-20-14 002.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-20-14 003.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-20-14 004.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-20-15 005.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-20-15 006.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-20-15 007.jpeg',
+    ],
+  },
+  {
+    id: 'GPT-2',
+    label: 'GPT-2',
+    files: [
+      'KakaoTalk_Photo_2026-09-29-09-18-36 001.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-37 002.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-37 003.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-38 004.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-38 005.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-38 006.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-39 007.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-39 008.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-39 009.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-40 010.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-40 011.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-41 012.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-41 013.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-41 014.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-42 015.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-42 016.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-43 017.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-43 018.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-43 019.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-44 020.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-44 021.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-44 022.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-45 023.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-45 024.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-46 025.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-46 026.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-46 027.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-47 028.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-47 029.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-18-47 030.jpeg',
+    ],
+  },
+  {
+    id: 'Neural_Network',
+    label: 'Neural_Network',
+    files: [
+      'KakaoTalk_Photo_2026-09-29-09-20-45 001.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-20-45 002.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-20-45 003.jpeg',
+    ],
+  },
+  {
+    id: 'rag',
+    label: 'rag',
+    files: [
+      'KakaoTalk_Photo_2026-09-29-09-16-18 001.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-16-19 002.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-16-19 003.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-16-19 004.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-16-20 005.jpeg',
+      'KakaoTalk_Photo_2026-09-29-09-16-20 006.jpeg',
+    ],
+  },
+];
+
 function DesktopMenu() {
   const [clock, setClock] = useState('');
 
@@ -65,7 +138,7 @@ function AboutMe({ isOpen, onClose }) {
       </header>
       <div className="about-video-frame">
         <iframe
-          src="https://www.youtube.com/embed/Tycpqn1ZhPk?rel=0"
+          src="https://www.youtube.com/embed/I9sDQE5ZdZk?rel=0"
           title="About me"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           referrerPolicy="strict-origin-when-cross-origin"
@@ -76,43 +149,57 @@ function AboutMe({ isOpen, onClose }) {
   );
 }
 
-function Gallery({ images, isOpen, onClose, onRemove, onUpload }) {
-  const inputRef = useRef(null);
+function Gallery({ isOpen, onClose }) {
+  const [activeFolderId, setActiveFolderId] = useState(null);
+  const activeFolder = GALLERY_FOLDERS.find((folder) => folder.id === activeFolderId);
+
+  useEffect(() => {
+    if (!isOpen) setActiveFolderId(null);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   return (
     <section className="gallery-window" aria-label="사진 갤러리">
       <header className="gallery-titlebar">
-        <strong>Gallery</strong>
+        <strong>{activeFolder ? `Gallery / ${activeFolder.label}` : 'Gallery'}</strong>
         <button type="button" aria-label="갤러리 닫기" onClick={onClose}>×</button>
       </header>
-      <div className="gallery-toolbar">
-        <button type="button" onClick={() => inputRef.current?.click()}>＋ 사진 업로드</button>
-        <span>이미지 파일을 여러 장 선택할 수 있습니다.</span>
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          hidden
-          onChange={onUpload}
-        />
-      </div>
-      <div className="gallery-grid">
-        {images.length ? images.map((image) => (
-          <figure className="gallery-photo" key={image.id}>
-            <img src={image.url} alt={image.name} />
-            <figcaption title={image.name}>{image.name}</figcaption>
-            <button type="button" aria-label={`${image.name} 삭제`} onClick={() => onRemove(image.id)}>×</button>
-          </figure>
-        )) : (
-          <div className="gallery-empty">
-            <span aria-hidden="true">▧</span>
-            <p>업로드한 사진이 여기에 표시됩니다.</p>
+      {activeFolder ? (
+        <>
+          <div className="gallery-toolbar">
+            <button type="button" onClick={() => setActiveFolderId(null)}>← 폴더로 돌아가기</button>
+            <span>{activeFolder.files.length}개 이미지</span>
           </div>
-        )}
-      </div>
+          <div className="gallery-grid">
+            {activeFolder.files.map((fileName) => (
+              <figure className="gallery-photo" key={fileName}>
+                <img
+                  src={encodeURI(`/assets/${activeFolder.id}/${fileName}`)}
+                  alt={`${activeFolder.label} ${fileName}`}
+                  loading="lazy"
+                />
+                <figcaption title={fileName}>{fileName}</figcaption>
+              </figure>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="gallery-folder-grid">
+          {GALLERY_FOLDERS.map((folder) => (
+            <button
+              className="gallery-folder"
+              type="button"
+              key={folder.id}
+              onClick={() => setActiveFolderId(folder.id)}
+            >
+              <span className="gallery-folder-icon" aria-hidden="true">📁</span>
+              <strong>{folder.label}</strong>
+              <small>{folder.files.length}개 이미지</small>
+            </button>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -179,37 +266,6 @@ function Taskbar({ isOpen, onGalleryOpen, onOpenPlanet, onResetDemo, onShutdown 
 export default function Desktop({ isShutDown, windowMode, onOpenPlanet, onResetDemo, onShutdown, ...windowProps }) {
   const [aboutMeOpen, setAboutMeOpen] = useState(false);
   const [galleryOpen, setGalleryOpen] = useState(false);
-  const [galleryImages, setGalleryImages] = useState([]);
-  const imageUrlsRef = useRef(new Set());
-
-  useEffect(() => () => {
-    imageUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-  }, []);
-
-  const uploadPhotos = (event) => {
-    const photos = Array.from(event.target.files || [])
-      .filter((file) => file.type.startsWith('image/'))
-      .map((file) => {
-        const url = URL.createObjectURL(file);
-        imageUrlsRef.current.add(url);
-        return {
-          id: `${file.name}-${file.lastModified}-${crypto.randomUUID()}`,
-          name: file.name,
-          url,
-        };
-      });
-    if (photos.length) setGalleryImages((current) => [...current, ...photos]);
-    event.target.value = '';
-  };
-
-  const removePhoto = (imageId) => {
-    setGalleryImages((current) => current.filter((image) => {
-      if (image.id !== imageId) return true;
-      URL.revokeObjectURL(image.url);
-      imageUrlsRef.current.delete(image.url);
-      return false;
-    }));
-  };
 
   const minimizePlanet = () => {
     windowProps.onWindowModeChange?.('minimized');
@@ -258,11 +314,8 @@ export default function Desktop({ isShutDown, windowMode, onOpenPlanet, onResetD
       <PlanetWindow windowMode={windowMode} {...windowProps} />
       <AboutMe isOpen={aboutMeOpen} onClose={() => setAboutMeOpen(false)} />
       <Gallery
-        images={galleryImages}
         isOpen={galleryOpen}
         onClose={() => setGalleryOpen(false)}
-        onRemove={removePhoto}
-        onUpload={uploadPhotos}
       />
       <Taskbar
         isOpen={windowMode === 'open' || windowMode === 'maximized'}
