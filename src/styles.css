@@ -299,7 +299,7 @@
       z-index: 25;
       top: 50%;
       left: 50%;
-      width: min(1040px, calc(100vw - 220px));
+      width: min(700px, calc(100vw - 160px));
       overflow: hidden;
       transform: translate(-50%, -50%);
       border: 3px solid #68737b;
@@ -488,8 +488,10 @@
 
     .gallery-lightbox img {
       display: block;
-      max-width: 100%;
-      max-height: 100%;
+      width: auto;
+      height: auto;
+      max-width: 72vw;
+      max-height: 68vh;
       object-fit: contain;
       border: 3px solid #e8e8e8;
       background: #111;
@@ -3159,6 +3161,11 @@
 
       .gallery-lightbox {
         padding: 58px 12px 64px;
+      }
+
+      .gallery-lightbox img {
+        max-width: 92vw;
+        max-height: 70vh;
       }
 
       .gallery-lightbox button {
