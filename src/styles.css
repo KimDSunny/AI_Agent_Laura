@@ -299,7 +299,7 @@
       z-index: 25;
       top: 50%;
       left: 50%;
-      width: min(460px, calc(100vw - 40px));
+      width: min(1040px, calc(100vw - 220px));
       overflow: hidden;
       transform: translate(-50%, -50%);
       border: 3px solid #68737b;
@@ -457,6 +457,14 @@
       border: 1px solid #aaa;
       background: #fff;
       box-shadow: 2px 2px 0 #c2c2c2;
+      cursor: zoom-in;
+    }
+
+    .gallery-photo:hover,
+    .gallery-photo:focus-visible {
+      border-color: #1c679e;
+      outline: 2px solid #72bce5;
+      outline-offset: -3px;
     }
 
     .gallery-photo img {
@@ -467,13 +475,43 @@
       background: #ddd;
     }
 
-    .gallery-photo figcaption {
-      margin-top: 6px;
-      overflow: hidden;
-      color: #333;
-      font-size: 11px;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+    .gallery-lightbox {
+      position: fixed;
+      z-index: 200;
+      inset: 0;
+      padding: 64px 80px 72px;
+      display: grid;
+      place-items: center;
+      background: rgba(0, 12, 28, 0.9);
+      cursor: zoom-out;
+    }
+
+    .gallery-lightbox img {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border: 3px solid #e8e8e8;
+      background: #111;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
+      cursor: default;
+    }
+
+    .gallery-lightbox button {
+      position: fixed;
+      z-index: 1;
+      top: 58px;
+      right: 38px;
+      width: 42px;
+      height: 42px;
+      border: 2px solid #fff;
+      background: #c9c9c9;
+      color: #222;
+      font-family: inherit;
+      font-size: 26px;
+      font-weight: bold;
+      line-height: 1;
+      cursor: pointer;
     }
 
     .shutdown-screen {
@@ -3098,7 +3136,7 @@
       }
 
       .about-window {
-        width: min(460px, calc(100vw - 20px));
+        width: calc(100vw - 20px);
       }
 
       .gallery-toolbar span {
@@ -3117,6 +3155,15 @@
 
       .gallery-folder {
         min-height: 138px;
+      }
+
+      .gallery-lightbox {
+        padding: 58px 12px 64px;
+      }
+
+      .gallery-lightbox button {
+        top: 52px;
+        right: 12px;
       }
     }
 

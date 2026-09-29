@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import PlanetWindow from './PlanetWindow';
 
 const GALLERY_FOLDERS = [
@@ -138,7 +139,7 @@ function AboutMe({ isOpen, onClose }) {
       </header>
       <div className="about-video-frame">
         <iframe
-          src="https://www.youtube.com/embed/I9sDQE5ZdZk?rel=0"
+          src="https://www.youtube.com/embed/I9sDQE5ZdZk?autoplay=1&mute=1&playsinline=1&rel=0"
           title="About me"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           referrerPolicy="strict-origin-when-cross-origin"
@@ -151,11 +152,24 @@ function AboutMe({ isOpen, onClose }) {
 
 function Gallery({ isOpen, onClose }) {
   const [activeFolderId, setActiveFolderId] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
   const activeFolder = GALLERY_FOLDERS.find((folder) => folder.id === activeFolderId);
 
   useEffect(() => {
-    if (!isOpen) setActiveFolderId(null);
+    if (!isOpen) {
+      setActiveFolderId(null);
+      setSelectedImage(null);
+    }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!selectedImage) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setSelectedImage(null);
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [selectedImage]);
 
   if (!isOpen) return null;
 
@@ -173,14 +187,22 @@ function Gallery({ isOpen, onClose }) {
           </div>
           <div className="gallery-grid">
             {activeFolder.files.map((fileName) => (
-              <figure className="gallery-photo" key={fileName}>
+              <button
+                className="gallery-photo"
+                type="button"
+                key={fileName}
+                aria-label={`${activeFolder.label} 이미지 크게 보기`}
+                onClick={() => setSelectedImage({
+                  src: encodeURI(`/assets/${activeFolder.id}/${fileName}`),
+                  alt: `${activeFolder.label} 이미지`,
+                })}
+              >
                 <img
                   src={encodeURI(`/assets/${activeFolder.id}/${fileName}`)}
-                  alt={`${activeFolder.label} ${fileName}`}
+                  alt=""
                   loading="lazy"
                 />
-                <figcaption title={fileName}>{fileName}</figcaption>
-              </figure>
+              </button>
             ))}
           </div>
         </>
@@ -200,6 +222,22 @@ function Gallery({ isOpen, onClose }) {
           ))}
         </div>
       )}
+      {selectedImage && createPortal((
+        <div
+          className="gallery-lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label="확대 이미지"
+          onClick={() => setSelectedImage(null)}
+        >
+          <button type="button" aria-label="확대 이미지 닫기" onClick={() => setSelectedImage(null)}>×</button>
+          <img
+            src={selectedImage.src}
+            alt={selectedImage.alt}
+            onClick={(event) => event.stopPropagation()}
+          />
+        </div>
+      ), document.body)}
     </section>
   );
 }
